@@ -174,8 +174,8 @@ export function WorkHub() {
 
   return (
     <div className="flex h-dvh flex-col bg-pure-black text-bone">
-      <header className="flex h-[84px] shrink-0 items-center gap-4 px-5">
-        <div className="flex min-w-[304px] items-center gap-1">
+      <header className="relative flex h-[84px] shrink-0 items-center px-5">
+        <div className="flex w-[303px] items-center gap-1">
           <span className="relative size-7 shrink-0">
             <img src="/figma/avatar.svg" alt="" width={28} height={28} />
             <span className="absolute inset-0 grid place-items-center text-[15px] font-semibold text-pure-black">
@@ -185,7 +185,7 @@ export function WorkHub() {
           <span className="text-sm font-medium text-mist">morgan@smb.org</span>
         </div>
 
-        <div className="flex flex-1 justify-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-bone outline-none">
               {viewLabel}
@@ -201,22 +201,24 @@ export function WorkHub() {
           </DropdownMenu>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Account menu"
-            className="grid size-5 place-items-center outline-none"
-          >
-            <img src="/figma/more.svg" alt="" width={20} height={20} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>morgan@smb.org</DropdownMenuLabel>
-            <DropdownMenuItem disabled>Sample claims. Not a live desk.</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="ml-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Account menu"
+              className="grid size-5 place-items-center outline-none"
+            >
+              <img src="/figma/more.svg" alt="" width={20} height={20} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>morgan@smb.org</DropdownMenuLabel>
+              <DropdownMenuItem disabled>Sample claims. Not a live desk.</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1 gap-4 px-5 pb-5">
-        <aside className="flex w-[304px] shrink-0 flex-col rounded-[12px] bg-graphite px-4 py-4">
+        <aside className="flex w-[303px] shrink-0 flex-col">
           <div className="relative">
             <img
               src="/figma/search.svg"
@@ -230,7 +232,7 @@ export function WorkHub() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search"
               aria-label="Search claims"
-              className="h-10 rounded-[10px] border-slate-edge bg-graphite pl-8 text-sm text-bone placeholder:text-mist"
+              className="h-10 rounded-[10px] border-iron bg-pure-black pl-[26px] text-sm text-bone placeholder:text-mist dark:border-iron dark:bg-pure-black"
             />
           </div>
 
@@ -248,7 +250,7 @@ export function WorkHub() {
                       current === filter.id ? "all" : filter.id,
                     )
                   }
-                  className={`flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm whitespace-nowrap ${
+                  className={`flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm leading-[normal] whitespace-nowrap ${
                     active ? "bg-iron text-bone" : "text-mist"
                   }`}
                 >
@@ -270,13 +272,12 @@ export function WorkHub() {
                   <button
                     type="button"
                     onClick={() => setSelectedId(claim.id)}
-                    className={`flex w-full items-center justify-between rounded-lg px-1 py-1 text-left ${
-                      isSelected ? "bg-iron" : ""
-                    }`}
+                    aria-current={isSelected ? "true" : undefined}
+                    className="flex h-[18px] w-full items-center justify-between text-left text-ash transition-colors hover:text-bone focus-visible:text-bone focus-visible:outline-none aria-[current=true]:text-bone"
                   >
                     <span className="flex items-center gap-0.5">
                       <img src="/figma/hash.svg" alt="" width={16} height={16} />
-                      <span className="text-[15px] text-bone">{claim.number}</span>
+                      <span className="text-[15px] leading-[18px]">{claim.number}</span>
                     </span>
                     <img
                       src={queueDot(claim.queue)}
@@ -295,12 +296,12 @@ export function WorkHub() {
         </aside>
 
         <section className="flex min-w-0 flex-1 rounded-[12px] bg-graphite">
-          <div className="flex w-[300px] shrink-0 flex-col self-stretch px-4 pt-4">
+          <div className="flex w-[319px] shrink-0 flex-col self-stretch px-4 pt-4">
             <div className="flex flex-col gap-4">
               {selected?.steps.map((step) => (
                 <div key={step.label} className="flex items-center justify-between">
                   <p
-                    className={`text-[15px] leading-normal ${
+                    className={`text-[15px] leading-[normal] ${
                       step.status === "current" ? "text-bone" : "text-ash"
                     }`}
                   >
