@@ -79,7 +79,7 @@ const piles: { id: Pile; label: string; detail: string }[] = [
 
 export function ManagersView() {
   const { claims } = useDesk();
-  const [tab, setTab] = useState<"today" | "results">("today");
+  const [tab, setTab] = useState<"today" | "results">("results");
   const [pile, setPile] = useState<Pile | null>("close");
   const [desk, setDesk] = useState<string | null>(null);
   const [column, setColumn] = useState<"open" | "waiting" | "overdue" | null>(null);
@@ -125,8 +125,8 @@ export function ManagersView() {
         <div className="flex items-center gap-1">
           {(
             [
-              ["today", "Today"],
               ["results", "Results"],
+              ["today", "Today"],
             ] as const
           ).map(([id, label]) => (
             <button
