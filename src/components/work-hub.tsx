@@ -1,77 +1,48 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AppHeader } from "@/components/app-header";
 import { ClaimChatSheet, ClaimComposer } from "@/components/claim-assistant";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { mockClaimReply, type ChatMessage } from "@/lib/claim-assistant";
 import {
   advanceSteps,
-  DESK_VIEWS,
   initialClaims,
   queueDot,
   type Claim,
-  type DeskView,
   type Queue,
 } from "@/lib/claims";
 
 type QueueFilter = Queue | "all";
 
-const queueFilters: { id: Queue; label: string }[] = [
+const queueFilters: { id: QueueFilter; label: string }[] = [
+  { id: "all", label: "All" },
   { id: "open", label: "Open" },
-  { id: "waiting", label: "waiting" },
-  { id: "deadline", label: "deadline" },
+  { id: "waiting", label: "Waiting" },
+  { id: "deadline", label: "Deadline" },
 ];
 
 export function WorkHub() {
   const [claims, setClaims] = useState<Claim[]>(initialClaims);
-  const [view, setView] = useState<DeskView>("work-hub");
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(initialClaims[0]?.id ?? "");
-  const [comment, setComment] = useState("");
   const [prompt, setPrompt] = useState("");
   const [threads, setThreads] = useState<Record<string, ChatMessage[]>>({});
   const [openChatId, setOpenChatId] = useState<string | null>(null);
   const [pendingClaimId, setPendingClaimId] = useState<string | null>(null);
 
-  const viewClaims = useMemo(() => {
-    if (view === "my-work") {
-      return claims.filter((claim) => claim.owner === "Morgan Hale");
-    }
-    if (view === "tracker-leads") {
-      return claims.filter((claim) => claim.queue === "deadline");
-    }
-    return claims;
-  }, [claims, view]);
-
   const searched = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return viewClaims;
-    return viewClaims.filter((claim) =>
+    if (!needle) return claims;
+    return claims.filter((claim) =>
       [claim.number, claim.patient, claim.practice, claim.payer]
         .join(" ")
         .toLowerCase()
         .includes(needle),
     );
-  }, [query, viewClaims]);
-
-  const counts = useMemo(
-    () => ({
-      open: searched.filter((claim) => claim.queue === "open").length,
-      waiting: searched.filter((claim) => claim.queue === "waiting").length,
-      deadline: searched.filter((claim) => claim.queue === "deadline").length,
-    }),
-    [searched],
-  );
+  }, [query, claims]);
 
   const visible = useMemo(
     () =>
@@ -83,8 +54,6 @@ export function WorkHub() {
 
   const selected =
     visible.find((claim) => claim.id === selectedId) ?? visible[0] ?? null;
-
-  const viewLabel = DESK_VIEWS.find((item) => item.id === view)?.label ?? "Work Hub";
 
   function updateClaim(id: string, updater: (claim: Claim) => Claim) {
     setClaims((current) =>
@@ -115,25 +84,6 @@ export function WorkHub() {
         },
       ],
     }));
-  }
-
-  function addComment() {
-    const text = comment.trim();
-    if (!selected || !text) return;
-    updateClaim(selected.id, (claim) => ({
-      ...claim,
-      history: [
-        ...claim.history,
-        {
-          id: `${claim.id}-comment-${claim.history.length + 1}`,
-          date: "Today",
-          source: "Morgan Hale",
-          audience: "Internal",
-          text,
-        },
-      ],
-    }));
-    setComment("");
   }
 
   function askAssistant(event: React.FormEvent<HTMLFormElement>) {
@@ -174,47 +124,7 @@ export function WorkHub() {
 
   return (
     <div className="flex h-dvh flex-col bg-pure-black text-bone">
-      <header className="relative flex h-20 shrink-0 items-center px-5">
-        <div className="flex items-center gap-1">
-          <img src="/figma/logo.svg" alt="" width={24} height={24} />
-          <p className="text-[20px] leading-[normal] whitespace-nowrap text-bone">
-            <span className="font-semibold">Work</span>
-            <span className="font-normal">Hub</span>
-          </p>
-        </div>
-
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-bone outline-none">
-              {viewLabel}
-              <img src="/figma/chevron.svg" alt="" width={16} height={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center">
-              {DESK_VIEWS.map((item) => (
-                <DropdownMenuItem key={item.id} onSelect={() => setView(item.id)}>
-                  {item.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <div className="ml-auto flex items-center gap-3">
-          <span className="text-sm font-medium text-mist">morgan@smb.org</span>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="Account menu"
-              className="grid size-5 place-items-center outline-none"
-            >
-              <img src="/figma/more.svg" alt="" width={20} height={20} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>morgan@smb.org</DropdownMenuLabel>
-              <DropdownMenuItem disabled>Sample claims. Not a live desk.</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
+      <AppHeader />
 
       <div className="flex min-h-0 flex-1 gap-4 px-5 pb-5">
         <aside className="flex w-[303px] shrink-0 flex-col">
@@ -235,29 +145,19 @@ export function WorkHub() {
             />
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-1">
+          <div className="mt-4 flex items-center gap-1">
             {queueFilters.map((filter) => {
-              const active =
-                queueFilter === filter.id ||
-                (queueFilter === "all" && filter.id === "open");
+              const active = queueFilter === filter.id;
               return (
                 <button
                   key={filter.id}
                   type="button"
-                  onClick={() =>
-                    setQueueFilter((current) =>
-                      current === filter.id ? "all" : filter.id,
-                    )
-                  }
-                  className={`flex items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-sm leading-[normal] whitespace-nowrap ${
+                  onClick={() => setQueueFilter(filter.id)}
+                  className={`rounded-[10px] px-2.5 py-1.5 text-sm leading-[normal] font-normal whitespace-nowrap ${
                     active ? "bg-iron text-bone" : "text-mist"
                   }`}
                 >
-                  {filter.id === "open" && active ? (
-                    <img src="/figma/dot-open.svg" alt="" width={8} height={8} />
-                  ) : null}
-                  <span className="font-semibold">{counts[filter.id]}</span>
-                  <span className="font-normal">{filter.label}</span>
+                  {filter.label}
                 </button>
               );
             })}
@@ -272,11 +172,22 @@ export function WorkHub() {
                     type="button"
                     onClick={() => setSelectedId(claim.id)}
                     aria-current={isSelected ? "true" : undefined}
-                    className="flex w-full items-center justify-between text-left text-sm leading-[normal] text-ash transition-colors hover:text-bone focus-visible:text-bone focus-visible:outline-none aria-[current=true]:text-bone"
+                    className="group flex w-full items-center justify-between text-left focus-visible:outline-none"
                   >
-                    <span className="flex items-center gap-0.5">
-                      <img src="/figma/hash.svg" alt="" width={16} height={16} />
-                      <span>{claim.number}</span>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <img src="/figma/hash.svg" alt="" width={12} height={12} />
+                      <span
+                        className={`shrink-0 text-sm leading-[normal] ${
+                          isSelected || claim.queue === "open"
+                            ? "text-bone"
+                            : "text-ash group-hover:text-bone"
+                        }`}
+                      >
+                        {claim.number}
+                      </span>
+                      <span className="truncate text-sm leading-[normal] text-mist">
+                        {claim.patient}
+                      </span>
                     </span>
                     <img
                       src={queueDot(claim.queue)}
@@ -400,30 +311,14 @@ export function WorkHub() {
                   )}
                 </section>
 
-                <form
-                  className="space-y-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    addComment();
-                  }}
-                >
-                  <label htmlFor="claim-comment" className="text-body-sm text-bone">
-                    Comment
-                  </label>
-                  <p className="text-caption text-ash">
-                    Internal note. This is not written to the clinic tracker.
-                  </p>
-                  <Textarea
-                    id="claim-comment"
-                    value={comment}
-                    onChange={(event) => setComment(event.target.value)}
-                    placeholder="Add comment"
-                    className="rounded-[10px] border-slate-edge bg-graphite text-sm"
-                  />
-                  <Button type="submit" variant="outline" className="h-10 rounded-[10px] px-3.5">
-                    Add comment
-                  </Button>
-                </form>
+                <section className="space-y-2">
+                  <h2 className="text-body-sm text-bone">Comment</h2>
+                  <div className="space-y-3 text-body-sm text-ash">
+                    {selected.note.split("\n\n").map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                </section>
               </div>
             ) : (
               <div className="flex flex-1 items-center px-6 text-sm text-ash">

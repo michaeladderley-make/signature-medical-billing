@@ -21,6 +21,22 @@ export function ClaimComposer({
 }: ComposerProps) {
   return (
     <form onSubmit={onSubmit} className="px-4 pb-4">
+      <div className="mb-2 flex items-center gap-2">
+        <button
+          type="button"
+          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist"
+        >
+          <img src="/figma/attach.svg" alt="" width={16} height={16} />
+          Attach
+        </button>
+        <button
+          type="button"
+          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist"
+        >
+          <img src="/figma/comment.svg" alt="" width={16} height={16} />
+          Comment
+        </button>
+      </div>
       <div className="relative">
         <Input
           ref={inputRef}
@@ -34,7 +50,7 @@ export function ClaimComposer({
             event.preventDefault();
             event.currentTarget.form?.requestSubmit();
           }}
-          className="h-10 rounded-[10px] border-slate-edge bg-graphite pr-10 pl-3 text-sm placeholder:text-mist dark:border-slate-edge dark:bg-graphite"
+          className="h-10 rounded-[10px] border-iron bg-graphite pr-10 pl-3 text-sm placeholder:text-mist dark:border-iron dark:bg-graphite"
         />
         <button
           type="submit"
