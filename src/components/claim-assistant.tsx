@@ -10,6 +10,8 @@ type ComposerProps = {
   inputRef?: React.RefObject<HTMLInputElement | null>;
   onPromptChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onAttach?: () => void;
+  onComment?: () => void;
 };
 
 export function ClaimComposer({
@@ -18,20 +20,26 @@ export function ClaimComposer({
   inputRef,
   onPromptChange,
   onSubmit,
+  onAttach,
+  onComment,
 }: ComposerProps) {
   return (
     <form onSubmit={onSubmit} className="px-4 pb-4">
       <div className="mb-2 flex items-center gap-2">
         <button
           type="button"
-          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist"
+          onClick={onAttach}
+          disabled={!onAttach}
+          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist disabled:opacity-40"
         >
           <img src="/figma/attach.svg" alt="" width={16} height={16} />
           Attach
         </button>
         <button
           type="button"
-          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist"
+          onClick={onComment}
+          disabled={!onComment}
+          className="flex h-10 items-center gap-1 rounded-[10px] border border-iron bg-graphite px-3 text-sm leading-[normal] text-mist disabled:opacity-40"
         >
           <img src="/figma/comment.svg" alt="" width={16} height={16} />
           Comment

@@ -3,16 +3,13 @@
 import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { ClaimChatSheet, ClaimComposer } from "@/components/claim-assistant";
+import { useDesk } from "@/components/desk-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { mockClaimReply, type ChatMessage } from "@/lib/claim-assistant";
-import {
-  advanceSteps,
-  initialClaims,
-  queueDot,
-  type Claim,
-  type Queue,
-} from "@/lib/claims";
+import { actionBlock, applyAction, fieldValue, stepBlock } from "@/lib/claim-actions";
+import { queueDot, type Claim, type Queue } from "@/lib/claims";
 
 type QueueFilter = Queue | "all";
 
@@ -24,25 +21,38 @@ const queueFilters: { id: QueueFilter; label: string }[] = [
 ];
 
 export function WorkHub() {
-  const [claims, setClaims] = useState<Claim[]>(initialClaims);
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState(initialClaims[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState("");
   const [prompt, setPrompt] = useState("");
   const [threads, setThreads] = useState<Record<string, ChatMessage[]>>({});
   const [openChatId, setOpenChatId] = useState<string | null>(null);
   const [pendingClaimId, setPendingClaimId] = useState<string | null>(null);
+  const [caller, setCaller] = useState("");
+  const [callNote, setCallNote] = useState("");
+  const { person, claims, setClaims } = useDesk();
+
+  const mine = useMemo(() => {
+    const rows =
+      person.desk === "all" ? claims : claims.filter((claim) => claim.desk === person.desk);
+    if (person.desk !== "cloud") return rows;
+    const order = ["Not on file", "New claims", "Called last time", "Paid, still on AR"];
+    return [...rows].sort(
+      (a, b) =>
+        order.indexOf(fieldValue(a, "AR tab")) - order.indexOf(fieldValue(b, "AR tab")),
+    );
+  }, [claims, person.desk]);
 
   const searched = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return claims;
-    return claims.filter((claim) =>
+    if (!needle) return mine;
+    return mine.filter((claim) =>
       [claim.number, claim.patient, claim.practice, claim.payer]
         .join(" ")
         .toLowerCase()
         .includes(needle),
     );
-  }, [query, claims]);
+  }, [query, mine]);
 
   const visible = useMemo(
     () =>
@@ -62,28 +72,42 @@ export function WorkHub() {
   }
 
   function markStepDone() {
-    if (!selected) return;
-    updateClaim(selected.id, (claim) => ({
-      ...claim,
-      steps: advanceSteps(claim.steps),
-    }));
+    if (!selected || stepBlock(selected)) return;
+    updateClaim(selected.id, (claim) => applyAction(claim, "Mark step done", person.role));
   }
 
   function recordAction(action: string) {
+    if (!selected || actionBlock(selected, action)) return;
+    const id = selected.id;
+    const next = applyAction(selected, action, person.role);
+    updateClaim(id, () => next);
+    if (person.desk !== "all" && next.desk !== person.desk) {
+      const rest = visible.filter((claim) => claim.id !== id);
+      setSelectedId(rest[0]?.id ?? "");
+    }
+  }
+
+  function addCall(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!selected) return;
+    const who = caller.trim();
+    const said = callNote.trim();
+    if (!who || !said) return;
     updateClaim(selected.id, (claim) => ({
       ...claim,
       history: [
         ...claim.history,
         {
-          id: `${claim.id}-${claim.history.length + 1}`,
+          id: `${claim.id}-call-${claim.history.length + 1}`,
           date: "Today",
-          source: "Morgan Hale",
-          audience: "Internal",
-          text: `${action} recorded on this claim.`,
+          source: person.name,
+          audience: "Call center",
+          text: `${who}: ${said}`,
         },
       ],
     }));
+    setCaller("");
+    setCallNote("");
   }
 
   function askAssistant(event: React.FormEvent<HTMLFormElement>) {
@@ -178,7 +202,7 @@ export function WorkHub() {
                       <img src="/figma/hash.svg" alt="" width={12} height={12} />
                       <span
                         className={`shrink-0 text-sm leading-[normal] ${
-                          isSelected || claim.queue === "open"
+                          isSelected || claim.queue !== "waiting"
                             ? "text-bone"
                             : "text-ash group-hover:text-bone"
                         }`}
@@ -209,9 +233,9 @@ export function WorkHub() {
           <div className="flex w-[319px] shrink-0 flex-col self-stretch px-4 pt-4">
             <div className="flex flex-col gap-4">
               {selected?.steps.map((step) => (
-                <div key={step.label} className="flex items-center justify-between">
+                <div key={step.label} className="flex items-center justify-between gap-3">
                   <p
-                    className={`text-[15px] leading-[normal] ${
+                    className={`min-w-0 text-[15px] leading-snug ${
                       step.status === "current" ? "text-bone" : "text-ash"
                     }`}
                   >
@@ -234,7 +258,7 @@ export function WorkHub() {
               ))}
             </div>
             <p className="mt-auto mb-4 flex h-10 items-center text-[12px] leading-normal font-normal text-mist">
-              last updated by Sam at 9:41pm
+              {selected?.owner ?? person.role}
             </p>
           </div>
 
@@ -245,7 +269,7 @@ export function WorkHub() {
               <Button
                 type="button"
                 onClick={markStepDone}
-                disabled={!selected || !currentStep}
+                disabled={!selected || !currentStep || Boolean(stepBlock(selected))}
                 className="h-10 rounded-[10px] px-3.5"
               >
                 Mark Step Done
@@ -262,7 +286,10 @@ export function WorkHub() {
                   <h1 className="text-heading-sm font-medium text-bone">
                     {selected.patient}
                   </h1>
-                  <p className="text-body-sm text-ash">{selected.practice}</p>
+                  <p className="text-body-sm text-ash">
+                    {selected.practice}
+                    <span> · {selected.owner}</span>
+                  </p>
                   <p className="text-body-sm text-bone">
                     {selected.statusLabel}
                     <span className="text-ash"> · {selected.urgency} · {selected.flag}</span>
@@ -274,24 +301,79 @@ export function WorkHub() {
                   </p>
                 </div>
 
+                <dl className="max-w-[520px] space-y-2">
+                  {selected.fields.map((field) => (
+                    <div key={field.label} className="grid grid-cols-[9.5rem_minmax(0,1fr)] items-baseline gap-x-6">
+                      <dt className="text-body-sm text-ash">{field.label}</dt>
+                      <dd className="text-body-sm text-bone">{field.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                {selected.files.length > 0 ? (
+                  <ul className="space-y-2">
+                    {selected.files.map((file) => (
+                      <li key={file} className="flex items-center gap-2 text-body-sm text-bone">
+                        <img src="/figma/attach.svg" alt="" width={16} height={16} />
+                        {file}
+                      </li>
+                    ))}
+                  </ul>
+                ) : selected.statusLabel === "Waiting for medical records" ? (
+                  <p className="text-body-sm text-ash">
+                    Waiting for medical records. Nothing is attached yet.
+                  </p>
+                ) : null}
+
                 <p className="max-w-[640px] text-body text-bone">
                   <span className="text-ash">Next step: </span>
                   {selected.nextStep}
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {selected.actions.map((action) => (
-                    <Button
-                      key={action}
-                      type="button"
-                      variant="outline"
-                      className="h-10 rounded-[10px] px-3.5"
-                      onClick={() => recordAction(action)}
-                    >
-                      {action}
-                    </Button>
-                  ))}
+                  {selected.actions.map((action) => {
+                    const reason = actionBlock(selected, action);
+                    return (
+                      <Button
+                        key={action}
+                        type="button"
+                        variant="outline"
+                        title={reason ?? undefined}
+                        disabled={Boolean(reason)}
+                        className="h-10 rounded-[10px] px-3.5"
+                        onClick={() => recordAction(action)}
+                      >
+                        {action}
+                      </Button>
+                    );
+                  })}
                 </div>
+                {selected && stepBlock(selected) ? (
+                  <p className="text-body-sm text-ash">{stepBlock(selected)}</p>
+                ) : null}
+
+                {selected.desk === "calls" ? (
+                  <form className="max-w-[520px] space-y-2" onSubmit={addCall}>
+                    <h2 className="text-body-sm text-bone">Log this call</h2>
+                    <Input
+                      value={caller}
+                      onChange={(event) => setCaller(event.target.value)}
+                      placeholder="Who called"
+                      aria-label="Who called"
+                      className="h-10 rounded-[10px] border-slate-edge bg-graphite text-sm"
+                    />
+                    <Textarea
+                      value={callNote}
+                      onChange={(event) => setCallNote(event.target.value)}
+                      placeholder="What they said"
+                      aria-label="What they said"
+                      className="min-h-16 rounded-[10px] border-slate-edge bg-graphite text-sm"
+                    />
+                    <Button type="submit" variant="outline" className="h-10 rounded-[10px] px-3.5">
+                      Add to this claim
+                    </Button>
+                  </form>
+                ) : null}
 
                 <section className="space-y-3">
                   <h2 className="eyebrow">History</h2>
@@ -302,7 +384,7 @@ export function WorkHub() {
                       {selected.history.map((entry) => (
                         <li key={entry.id} className="text-body-sm">
                           <p className="text-ash">
-                            {entry.date} · {entry.source} · {entry.audience}
+                            {entry.date} · {entry.source === entry.audience ? entry.source : `${entry.source} · ${entry.audience}`}
                           </p>
                           <p className="text-bone">{entry.text}</p>
                         </li>
@@ -312,7 +394,7 @@ export function WorkHub() {
                 </section>
 
                 <section className="space-y-2">
-                  <h2 className="text-body-sm text-bone">Comment</h2>
+                  <h2 id="claim-comment" className="text-body-sm text-bone">Comment</h2>
                   <div className="space-y-3 text-body-sm text-ash">
                     {selected.note.split("\n\n").map((paragraph) => (
                       <p key={paragraph}>{paragraph}</p>
@@ -343,6 +425,12 @@ export function WorkHub() {
                 disabled={!selected}
                 onPromptChange={setPrompt}
                 onSubmit={askAssistant}
+                onAttach={
+                  selected?.actions.includes("Attach record")
+                    ? () => recordAction("Attach record")
+                    : undefined
+                }
+                onComment={() => document.getElementById("claim-comment")?.scrollIntoView({ block: "nearest" })}
               />
             )}
           </div>

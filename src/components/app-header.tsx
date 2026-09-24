@@ -9,11 +9,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DESK_VIEWS } from "@/lib/claims";
+import { useDesk } from "@/components/desk-provider";
+import { DESK_VIEWS, PEOPLE } from "@/lib/claims";
 
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const { person, setPersonId } = useDesk();
   const viewLabel =
     DESK_VIEWS.find((item) => item.href === pathname)?.label ?? "Work Hub";
 
@@ -50,17 +52,21 @@ export function AppHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        <span className="text-sm font-medium text-mist">morgan@smb.org</span>
+        <span className="text-sm font-medium text-mist">{person.role}</span>
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Account menu"
+            aria-label="Switch department"
             className="grid size-5 place-items-center outline-none"
           >
             <img src="/figma/more.svg" alt="" width={20} height={20} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>morgan@smb.org</DropdownMenuLabel>
-            <DropdownMenuItem disabled>Sample claims. Not a live desk.</DropdownMenuItem>
+            <DropdownMenuLabel>Department</DropdownMenuLabel>
+            {PEOPLE.map((item) => (
+              <DropdownMenuItem key={item.id} onSelect={() => setPersonId(item.id)}>
+                {item.role}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
