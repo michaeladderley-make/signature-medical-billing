@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ChatMessage } from "@/lib/claim-assistant";
 
@@ -21,23 +20,31 @@ export function ClaimComposer({
   onSubmit,
 }: ComposerProps) {
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-3 px-4 pb-4">
-      <Input
-        ref={inputRef}
-        value={prompt}
-        onChange={(event) => onPromptChange(event.target.value)}
-        placeholder="What can I help you with?"
-        aria-label="Ask about this claim"
-        disabled={disabled}
-        className="h-10 rounded-[10px] border-slate-edge bg-graphite px-3 text-sm placeholder:text-mist"
-      />
-      <Button
-        type="submit"
-        disabled={disabled || prompt.trim().length === 0}
-        className="h-10 rounded-[10px] px-3.5"
-      >
-        Submit
-      </Button>
+    <form onSubmit={onSubmit} className="px-4 pb-4">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={prompt}
+          onChange={(event) => onPromptChange(event.target.value)}
+          placeholder="What can I help you with?"
+          aria-label="Ask about this claim"
+          disabled={disabled}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey) return;
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }}
+          className="h-10 rounded-[10px] border-slate-edge bg-graphite pr-10 pl-3 text-sm placeholder:text-mist dark:border-slate-edge dark:bg-graphite"
+        />
+        <button
+          type="submit"
+          aria-label="Send"
+          disabled={disabled || prompt.trim().length === 0}
+          className="absolute top-1/2 right-3 grid size-4 -translate-y-1/2 place-items-center outline-none disabled:opacity-100"
+        >
+          <img src="/figma/return.svg" alt="" width={16} height={16} />
+        </button>
+      </div>
     </form>
   );
 }

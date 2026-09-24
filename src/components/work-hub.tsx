@@ -174,15 +174,13 @@ export function WorkHub() {
 
   return (
     <div className="flex h-dvh flex-col bg-pure-black text-bone">
-      <header className="relative flex h-[84px] shrink-0 items-center px-5">
-        <div className="flex w-[303px] items-center gap-1">
-          <span className="relative size-7 shrink-0">
-            <img src="/figma/avatar.svg" alt="" width={28} height={28} />
-            <span className="absolute inset-0 grid place-items-center text-[15px] font-semibold text-pure-black">
-              M
-            </span>
-          </span>
-          <span className="text-sm font-medium text-mist">morgan@smb.org</span>
+      <header className="relative flex h-20 shrink-0 items-center px-5">
+        <div className="flex items-center gap-1">
+          <img src="/figma/logo.svg" alt="" width={24} height={24} />
+          <p className="text-[20px] leading-[normal] whitespace-nowrap text-bone">
+            <span className="font-semibold">Work</span>
+            <span className="font-normal">Hub</span>
+          </p>
         </div>
 
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -201,7 +199,8 @@ export function WorkHub() {
           </DropdownMenu>
         </div>
 
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-sm font-medium text-mist">morgan@smb.org</span>
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Account menu"
@@ -264,7 +263,7 @@ export function WorkHub() {
             })}
           </div>
 
-          <ul className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+          <ul className="mt-4 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
             {visible.map((claim) => {
               const isSelected = claim.id === selected?.id;
               return (
@@ -273,11 +272,11 @@ export function WorkHub() {
                     type="button"
                     onClick={() => setSelectedId(claim.id)}
                     aria-current={isSelected ? "true" : undefined}
-                    className="flex h-[18px] w-full items-center justify-between text-left text-ash transition-colors hover:text-bone focus-visible:text-bone focus-visible:outline-none aria-[current=true]:text-bone"
+                    className="flex w-full items-center justify-between text-left text-sm leading-[normal] text-ash transition-colors hover:text-bone focus-visible:text-bone focus-visible:outline-none aria-[current=true]:text-bone"
                   >
                     <span className="flex items-center gap-0.5">
                       <img src="/figma/hash.svg" alt="" width={16} height={16} />
-                      <span className="text-[15px] leading-[18px]">{claim.number}</span>
+                      <span>{claim.number}</span>
                     </span>
                     <img
                       src={queueDot(claim.queue)}
