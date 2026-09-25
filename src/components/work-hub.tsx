@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { mockClaimReply, type ChatMessage } from "@/lib/claim-assistant";
 import { actionBlock, applyAction, fieldValue, stepBlock } from "@/lib/claim-actions";
+import { DEMO_CLAIM_ID, demoClaim, demoGuide, demoStepCount, demoStepOf } from "@/lib/demo-tour";
 import { queueDot, type Claim, type Queue } from "@/lib/claims";
 
 type QueueFilter = Queue | "all";
@@ -33,8 +34,10 @@ export function WorkHub() {
   const { person, claims, setClaims } = useDesk();
 
   const mine = useMemo(() => {
-    const rows =
-      person.desk === "all" ? claims : claims.filter((claim) => claim.desk === person.desk);
+    if (person.desk === "demo") return claims.filter((claim) => claim.id === DEMO_CLAIM_ID);
+    const rows = (
+      person.desk === "all" ? claims : claims.filter((claim) => claim.desk === person.desk)
+    ).filter((claim) => claim.id !== DEMO_CLAIM_ID);
     if (person.desk !== "cloud") return rows;
     const order = ["Not on file", "New claims", "Called last time", "Paid, still on AR"];
     return [...rows].sort(
@@ -69,6 +72,13 @@ export function WorkHub() {
     setClaims((current) =>
       current.map((claim) => (claim.id === id ? updater(claim) : claim)),
     );
+  }
+
+  function continueDemo() {
+    if (!selected || selected.id !== DEMO_CLAIM_ID) return;
+    const next = demoStepOf(selected) + 1;
+    if (next >= demoStepCount()) return;
+    updateClaim(selected.id, () => demoClaim(next));
   }
 
   function markStepDone() {
@@ -266,6 +276,7 @@ export function WorkHub() {
 
           <div className="relative flex min-w-0 flex-1 flex-col">
             <div className="flex justify-end px-4 pt-4">
+              {person.desk === "demo" ? null : (
               <Button
                 type="button"
                 onClick={markStepDone}
@@ -274,6 +285,7 @@ export function WorkHub() {
               >
                 Mark Step Done
               </Button>
+              )}
             </div>
 
             {selected ? (
@@ -300,6 +312,22 @@ export function WorkHub() {
                     <span className="text-ash"> · {selected.balance}</span>
                   </p>
                 </div>
+
+                {person.desk === "demo" ? (
+                  <div className="max-w-[640px] space-y-3 rounded-[10px] border border-iron bg-pure-black px-4 py-4">
+                    <p className="eyebrow">
+                      Guided tour · {demoStepOf(selected) + 1} of {demoStepCount()} · {selected.owner}
+                    </p>
+                    <p className="text-body-sm text-bone">{demoGuide(demoStepOf(selected)).text}</p>
+                    {demoGuide(demoStepOf(selected)).button ? (
+                      <Button type="button" onClick={continueDemo} className="h-10 rounded-[10px] px-3.5">
+                        {demoGuide(demoStepOf(selected)).button}
+                      </Button>
+                    ) : (
+                      <p className="text-body-sm text-ash">Tour complete. The claim is fully paid.</p>
+                    )}
+                  </div>
+                ) : null}
 
                 <dl className="max-w-[520px] space-y-2">
                   {selected.fields.map((field) => (
@@ -330,6 +358,7 @@ export function WorkHub() {
                   {selected.nextStep}
                 </p>
 
+                {person.desk === "demo" ? null : (
                 <div className="flex flex-wrap gap-2">
                   {selected.actions.map((action) => {
                     const reason = actionBlock(selected, action);
@@ -348,7 +377,8 @@ export function WorkHub() {
                     );
                   })}
                 </div>
-                {selected && stepBlock(selected) ? (
+                )}
+                {person.desk !== "demo" && selected && stepBlock(selected) ? (
                   <p className="text-body-sm text-ash">{stepBlock(selected)}</p>
                 ) : null}
 

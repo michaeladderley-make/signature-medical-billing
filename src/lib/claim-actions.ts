@@ -132,6 +132,92 @@ export function applyAction(claim: Claim, action: string, actor: string): Claim 
     minutesFor(action),
   );
 
+  if (action === "No — routed to Renee (Denials)") {
+    return handoff(
+      {
+        ...setField(noted, "Authorization on file", "No"),
+        ...{ flag: "Red" },
+      },
+      "appeals",
+      "Appeals",
+      [
+        "TL finds medical record denial in EDI report, AMD, or AR report",
+        "Look up patient's medical records in AMD",
+        "Routed to Renee (Denials)",
+      ],
+      2,
+      "Routed to Renee (Denials)",
+      "No authorization is on file. Appeals has the denial.",
+      ["Dispute"],
+    );
+  }
+
+  if (action === "Yes — authorization is on file") {
+    noted.history[noted.history.length - 1] = {
+      ...noted.history[noted.history.length - 1],
+      text: "Suggestion flagged. Authorization is on file.",
+    };
+    return {
+      ...setField(noted, "Authorization on file", "Yes"),
+      steps: advanceSteps(claim.steps),
+      statusLabel: "TL pulls medical record from the EHR",
+      actions: ["TL pulls medical record from the EHR"],
+      nextStep: "Pull the record, then verify codes, date of service, and the provider's signature.",
+    };
+  }
+
+  if (action === "TL pulls medical record from the EHR") {
+    const file = "operative-note.pdf";
+    return {
+      ...setField(noted, "Record", file),
+      files: claim.files.includes(file) ? claim.files : [...claim.files, file],
+      steps: advanceSteps(claim.steps),
+      statusLabel: "TL verifies signed codes, DOS, provider's signature",
+      actions: ["TL verifies signed codes, DOS, provider's signature"],
+      nextStep: "Verify the signed codes, the date of service, and the provider's signature.",
+    };
+  }
+
+  if (action === "TL verifies signed codes, DOS, provider's signature") {
+    return {
+      ...setField(setField(setField(noted, "Codes", "Checked"), "Date of service check", "Checked"), "Provider signature", "Checked"),
+      steps: advanceSteps(claim.steps),
+      statusLabel: "Tracker Lead sends to requestor",
+      actions: [
+        "Provider Portal (preferred)",
+        "Vonage Fax (2nd)",
+        "Email (3rd)",
+        "Mail via postal methods (last resort)",
+      ],
+      nextStep: "Send the record. Portal first, then fax, then email, then mail.",
+    };
+  }
+
+  if (
+    action === "Provider Portal (preferred)" ||
+    action === "Vonage Fax (2nd)" ||
+    action === "Email (3rd)" ||
+    action === "Mail via postal methods (last resort)"
+  ) {
+    return {
+      ...setField(noted, "Sent by", action),
+      steps: advanceSteps(claim.steps),
+      statusLabel: "Tracker Lead updates Tracker",
+      actions: ["Tracker Lead updates Tracker"],
+      nextStep: "Update the tracker now that the record was sent.",
+    };
+  }
+
+  if (action === "Tracker Lead updates Tracker") {
+    return {
+      ...setField(noted, "Tracker", "Updated"),
+      steps: advanceSteps(claim.steps),
+      statusLabel: "Tracker updated",
+      actions: [],
+      nextStep: "The tracker shows the record was sent.",
+    };
+  }
+
   if (action === "Attach record") {
     const missing = fieldValue(claim, "Missing");
     const file = missing.toLowerCase().includes("office") ? "office-note.pdf" : "operative-note.pdf";

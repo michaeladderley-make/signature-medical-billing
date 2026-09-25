@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { demoClaim } from "@/lib/demo-tour";
 import { initialClaims, PEOPLE, type Claim, type Person } from "@/lib/claims";
 
 const DeskContext = createContext<{
@@ -11,8 +12,8 @@ const DeskContext = createContext<{
 } | null>(null);
 
 export function DeskProvider({ children }: { children: React.ReactNode }) {
-  const [personId, setPersonId] = useState(PEOPLE[0].id);
-  const [claims, setClaims] = useState<Claim[]>(initialClaims);
+  const [personId, setPersonId] = useState("tracker");
+  const [claims, setClaims] = useState<Claim[]>([demoClaim(0), ...initialClaims]);
   const person = PEOPLE.find((item) => item.id === personId) ?? PEOPLE[0];
 
   return (

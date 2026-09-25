@@ -53,10 +53,11 @@ export type Person = {
   name: string;
   role: string;
   email: string;
-  desk: Desk | "all";
+  desk: Desk | "all" | "demo";
 };
 
 export const PEOPLE: Person[] = [
+  { id: "demo", name: "Demo", role: "Demo", email: "", desk: "demo" },
   { id: "charge", name: "Charge review", role: "Charge review", email: "", desk: "charge" },
   { id: "calls", name: "Call center", role: "Call center", email: "", desk: "calls" },
   { id: "tracker", name: "Tracker leads", role: "Tracker leads", email: "", desk: "tracker" },
@@ -107,6 +108,61 @@ export function advanceSteps(steps: Step[]): Step[] {
 }
 
 export const initialClaims: Claim[] = [
+  {
+    id: "helen",
+    number: "618440219",
+    queue: "open",
+    desk: "tracker",
+    owner: "Tracker leads",
+    patient: "Helen Marsh",
+    practice: "Cedar Row ENT",
+    statusLabel: "Is the authorization on file?",
+    urgency: "Urgent",
+    flag: "Yellow",
+    dueDate: "Oct 7, 2026",
+    payer: "Medicare",
+    balance: "$1,120.00",
+    note: "Medical record denial on the EDI report. The suggestion is that no authorization is on file, so this would go to Renee. Confirm that, or flag it if the authorization is there.",
+    nextStep: "Is the authorization on file?",
+    steps: stepsThrough(
+      [
+        "TL finds medical record denial in EDI report, AMD, or AR report",
+        "Look up patient's medical records in AMD",
+        "Is the authorization on file?",
+        "TL pulls medical record from the EHR",
+        "TL verifies signed codes, DOS, provider's signature",
+        "Tracker Lead sends to requestor",
+        "Tracker Lead updates Tracker",
+      ],
+      2,
+    ),
+    fields: [
+      { label: "Came in on", value: "EDI report" },
+      { label: "Also found in", value: "AdvancedMD" },
+      { label: "Suggested route", value: "No authorization on file. Route to Renee (Denials)." },
+      { label: "Authorization on file", value: "Not confirmed" },
+      { label: "CPT", value: "31231" },
+      { label: "Date of service", value: "Aug 2, 2026" },
+    ],
+    files: ["edi-denial-helen.pdf"],
+    history: [
+      {
+        id: "helen-1",
+        date: "Sep 22, 2026",
+        source: "EDI report",
+        audience: "Tracker",
+        text: "TL finds medical record denial in EDI report, AMD, or AR report.",
+      },
+      {
+        id: "helen-2",
+        date: "Sep 22, 2026",
+        source: "Tracker leads",
+        audience: "Tracker",
+        text: "Look up patient's medical records in AMD.",
+      },
+    ],
+    actions: ["No — routed to Renee (Denials)", "Yes — authorization is on file"],
+  },
   {
     id: "ryan",
     number: "204739292",
