@@ -7,6 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDesk } from "@/components/desk-provider";
@@ -15,7 +16,7 @@ import { DESK_VIEWS, PEOPLE } from "@/lib/claims";
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const { person, setPersonId } = useDesk();
+  const { person, setPersonId, resetClaims } = useDesk();
   const viewLabel =
     DESK_VIEWS.find((item) => item.href === pathname)?.label ?? "Work Hub";
 
@@ -52,13 +53,13 @@ export function AppHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        <span className="text-sm font-medium text-mist">{person.role}</span>
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Switch department"
-            className="grid size-5 place-items-center outline-none"
+            className="flex items-center gap-1 text-sm font-medium text-bone outline-none"
           >
-            <img src="/figma/more.svg" alt="" width={20} height={20} />
+            {person.role}
+            <img src="/figma/chevron.svg" alt="" width={16} height={16} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Department</DropdownMenuLabel>
@@ -67,6 +68,8 @@ export function AppHeader() {
                 {item.role}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={resetClaims}>Reset sample claims</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

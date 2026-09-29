@@ -6,13 +6,15 @@ import { queueDot, type Claim } from "@/lib/claims";
 import { balanceStats, performancePeriod, performanceStats, weeklyVolume } from "@/lib/manager-analytics";
 
 const DESKS = [
-  "Charge review",
-  "Call center",
-  "Tracker leads",
+  "Clinic Liaison",
+  "Call Center",
+  "Charge Review",
+  "Intake / Patient Accounts",
+  "Medical Records (NBSD)",
+  "Claims Appeals",
+  "Tracker Leads",
   "Cloud Staff",
-  "Medical records",
-  "Appeals",
-  "Billing",
+  "Credentialing",
 ] as const;
 
 const TODAY = new Date("2026-09-24T12:00:00");
@@ -86,6 +88,13 @@ export function ManagersView() {
 
   const finishedToday = useMemo(
     () => claims.flatMap((claim) => claim.history.filter((entry) => entry.date === "Today" && entry.minutes)),
+    [claims],
+  );
+  const reviewedToday = useMemo(
+    () =>
+      claims.flatMap((claim) =>
+        claim.history.filter((entry) => entry.date === "Today" && entry.text === "Reviewed. No change."),
+      ),
     [claims],
   );
 
@@ -184,6 +193,7 @@ export function ManagersView() {
                 <th className="py-2 font-normal">Overdue</th>
                 <th className="py-2 font-normal">Oldest</th>
                 <th className="py-2 font-normal">Finished today</th>
+                <th className="py-2 font-normal">Reviewed</th>
                 <th className="py-2 font-normal">Minutes</th>
               </tr>
             </thead>
@@ -220,6 +230,7 @@ export function ManagersView() {
                     })}
                     <td className="py-3 text-ash">{oldest ? `${oldest.patient} · ${oldest.dueDate}` : "—"}</td>
                     <td className="py-3">{done.length}</td>
+                    <td className="py-3">{reviewedToday.filter((entry) => entry.source === name).length}</td>
                     <td className="py-3 text-ash">{minutes}</td>
                   </tr>
                 );
@@ -259,6 +270,17 @@ export function ManagersView() {
 }
 
 function Results({ claims }: { claims: Claim[] }) {
+  const today = claims.flatMap((claim) => claim.history.filter((entry) => entry.date === "Today"));
+  const posted = today.filter((entry) => entry.text === "Post payment.").length;
+  const reviewed = today.filter((entry) => entry.text === "Reviewed. No change.").length;
+  const loggedMinutes = today.reduce((sum, entry) => sum + (entry.minutes ?? 0), 0);
+  const liveStats = performanceStats.map((stat) => {
+    const base = Number(stat.value.replace("%", ""));
+    if (stat.label === "EOBs posted") return { ...stat, value: String(base + posted) };
+    if (stat.label === "Reviewed, no change") return { ...stat, value: String(base + reviewed) };
+    if (stat.label === "Task hours") return { ...stat, value: (base + loggedMinutes / 60).toFixed(1) };
+    return stat;
+  });
   const weekMax = Math.max(...weeklyVolume.flatMap((week) => [week.filed, week.paid]));
   const desks = DESKS.map((label) => ({
     label,
@@ -290,7 +312,7 @@ function Results({ claims }: { claims: Claim[] }) {
       </div>
 
       <div className="grid border-b border-iron sm:grid-cols-2 xl:grid-cols-3">
-        {performanceStats.map((stat) => (
+        {liveStats.map((stat) => (
           <div key={stat.label} className="px-6 py-5">
             <p className="text-sm leading-[normal] text-mist">{stat.label}</p>
             <p className="mt-2 text-heading leading-none text-bone">{stat.value}</p>
@@ -336,7 +358,7 @@ function Results({ claims }: { claims: Claim[] }) {
           <ul className="mt-4 flex flex-col gap-3">
             {desks.map((step) => (
               <li key={step.label} className="flex items-center gap-3">
-                <span className="w-36 shrink-0 text-sm leading-[normal] text-ash">{step.label}</span>
+                <span className="w-48 shrink-0 text-sm leading-[normal] text-ash">{step.label}</span>
                 <span className="h-2 flex-1 overflow-hidden rounded-full bg-iron">
                   <span
                     className="block h-full rounded-full bg-soft-indigo"
