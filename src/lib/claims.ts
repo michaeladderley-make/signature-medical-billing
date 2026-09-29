@@ -208,7 +208,7 @@ export const initialClaims: Claim[] = [
         minutes: 18,
       },
     ],
-    actions: ["Ready for Alicia", "Waiting on clinic"],
+    actions: ["Correct in AdvancedMD"],
   },
   {
     id: "noah",
@@ -507,7 +507,7 @@ export const initialClaims: Claim[] = [
     ],
     files: [],
     history: [],
-    actions: ["Ready for Alicia", "Waiting on clinic"],
+    actions: ["Ready for Alicia"],
   },
   {
     id: "ethan",
@@ -534,7 +534,7 @@ export const initialClaims: Claim[] = [
     ],
     files: [],
     history: [],
-    actions: ["Ready for Alicia", "Waiting on clinic"],
+    actions: ["Ready for Alicia"],
   },
   {
     id: "brian",
@@ -938,7 +938,7 @@ const extraClaims: Claim[] = [
       { label: "Date of service", value: "Sep 23, 2026" },
       { label: "Issue", value: "Simple" },
     ],
-    actions: ["Ready for Alicia", "Waiting on clinic"],
+    actions: ["Ready for Alicia"],
   }),
   extra({
     id: "nina",
@@ -961,7 +961,7 @@ const extraClaims: Claim[] = [
       { label: "Credentialing", value: "Not approved" },
       { label: "CPT", value: "99213" },
     ],
-    actions: ["Waiting on clinic"],
+    actions: ["Send to credentialing"],
   }),
   extra({
     id: "omar",
@@ -1545,7 +1545,7 @@ const moreClaims: Claim[] = [
         { label: "Issue", value: "Simple" },
         { label: "Subscriber ID", value: "On file" },
       ],
-      ["Ready for Alicia", "Waiting on clinic"],
+      ["Ready for Alicia"],
     ),
   ),
   ...Array.from({ length: 3 }, () =>
@@ -1562,7 +1562,7 @@ const moreClaims: Claim[] = [
         { label: "Where", value: "Claims Center · Exclusions" },
         { label: "Rejection", value: "Payer-specific rule" },
       ],
-      ["Ready for Alicia", "Waiting on clinic"],
+      ["Ready for Alicia"],
     ),
   ),
   ...Array.from({ length: 2 }, () =>
@@ -1579,7 +1579,7 @@ const moreClaims: Claim[] = [
         { label: "Credentialing", value: "Not approved" },
         { label: "Provider", value: "Dr. Avery Lang" },
       ],
-      ["Waiting on clinic"],
+      ["Send to credentialing"],
       "Routine",
       "Oct 8, 2026",
     ),

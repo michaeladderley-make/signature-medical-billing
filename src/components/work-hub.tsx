@@ -376,6 +376,14 @@ export function WorkHub() {
                       </Button>
                     );
                   })}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 rounded-[10px] px-3.5"
+                    onClick={() => recordAction("Reviewed")}
+                  >
+                    Reviewed
+                  </Button>
                 </div>
                 )}
                 {person.desk !== "demo" && selected && stepBlock(selected) ? (

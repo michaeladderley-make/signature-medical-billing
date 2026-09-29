@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDesk } from "@/components/desk-provider";
 import { queueDot, type Claim } from "@/lib/claims";
-import { performancePeriod, performanceStats, weeklyVolume } from "@/lib/manager-analytics";
+import { balanceStats, performancePeriod, performanceStats, weeklyVolume } from "@/lib/manager-analytics";
 
 const DESKS = [
   "Charge review",
@@ -277,13 +277,23 @@ function Results({ claims }: { claims: Claim[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-4 border-y border-iron">
-        {performanceStats.map((stat) => (
+      <div className="grid grid-cols-2 border-y border-iron xl:grid-cols-4">
+        {balanceStats.map((stat) => (
           <div key={stat.label} className="px-6 py-5">
             <p className="text-sm leading-[normal] text-mist">{stat.label}</p>
             <p className={`mt-2 text-heading leading-none ${"tone" in stat && stat.tone === "deadline" ? "text-[#EA4444]" : "text-bone"}`}>
               {stat.value}
             </p>
+            <p className="mt-2 text-sm leading-[normal] text-ash">{stat.detail}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid border-b border-iron sm:grid-cols-2 xl:grid-cols-3">
+        {performanceStats.map((stat) => (
+          <div key={stat.label} className="px-6 py-5">
+            <p className="text-sm leading-[normal] text-mist">{stat.label}</p>
+            <p className="mt-2 text-heading leading-none text-bone">{stat.value}</p>
             <p className="mt-2 text-sm leading-[normal] text-ash">{stat.detail}</p>
           </div>
         ))}

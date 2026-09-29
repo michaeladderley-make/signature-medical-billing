@@ -4,7 +4,7 @@ import type { Queue } from "@/lib/claims";
 
 export const performancePeriod = "September 2026";
 
-export const performanceStats = [
+export const balanceStats = [
   {
     label: "Open balance",
     value: "$186,420",
@@ -25,6 +25,39 @@ export const performanceStats = [
     label: "Days to collect",
     value: "27",
     detail: "Average from submission to payment",
+  },
+];
+
+export const performanceStats = [
+  {
+    label: "Daily hours",
+    value: "46.5",
+    detail: "Hours logged today across the desks",
+  },
+  {
+    label: "Task hours",
+    value: "38.0",
+    detail: "Hours on claim work, apart from waiting",
+  },
+  {
+    label: "Hourly expectation",
+    value: "92%",
+    detail: "Task hours against the day’s target",
+  },
+  {
+    label: "EOBs pulled",
+    value: "64",
+    detail: "Reports opened from AdvancedMD today",
+  },
+  {
+    label: "EOBs posted",
+    value: "41",
+    detail: "Payments recorded as posted",
+  },
+  {
+    label: "Reviewed, no change",
+    value: "17",
+    detail: "Looked at and left as they were",
   },
 ];
 

@@ -18,6 +18,7 @@ const FINISHED = new Set([
   "Mark step done",
   "Turn row green",
   "Ready for Alicia",
+  "Reviewed",
   "Send by portal",
   "Move along",
   "Post payment",
@@ -337,13 +338,30 @@ export function applyAction(claim: Claim, action: string, actor: string): Claim 
     };
   }
 
-  if (action === "Waiting on clinic") {
+  if (action === "Send to credentialing") {
     return {
       ...noted,
       queue: "waiting",
-      statusLabel: "Waiting on clinic",
-      nextStep: "Waiting on the clinic. The claim stays on this desk.",
+      statusLabel: "Credentialing",
+      actions: [],
+      nextStep: "A complex issue. Credentialing has it. Alicia does not send this yet.",
     };
+  }
+
+  if (action === "Correct in AdvancedMD") {
+    return {
+      ...setField(noted, "Auth number", "Corrected in AdvancedMD"),
+      actions: ["Ready for Alicia"],
+      nextStep: "The simple correction is recorded. Mallory can finish the review, then Alicia sends it.",
+    };
+  }
+
+  if (action === "Reviewed") {
+    noted.history[noted.history.length - 1] = {
+      ...noted.history[noted.history.length - 1],
+      text: "Reviewed. No change.",
+    };
+    return noted;
   }
 
   if (action === "Turn row green") {

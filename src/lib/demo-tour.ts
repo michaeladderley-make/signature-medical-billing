@@ -115,13 +115,14 @@ const beats: Beat[] = [
     note: "This is the Not on file tab. Cloud Staff checks the portal before anyone calls Medicare.",
     steps: at(3),
     fields: [
+      { label: "On the new AR export", value: "Yes" },
+      { label: "Do not call", value: "No" },
       { label: "AR tab", value: "Not on file" },
       { label: "Portal", value: "Not checked" },
-      { label: "Why this tab is first", value: "Filing deadline" },
     ],
     files: [],
     guide:
-      "Cloud Staff comes in here. Chris’s aging report splits claims into tabs. Not on file is first. Cloud Staff checks the payer portal before calling. If the portal says it is not on file, they mail the claim. If a login is missing, that becomes a credentialing task. Their finding does not close the claim.",
+      "Chris compared this export with the last AR run. The row is new, it is not on the do-not-call list, and he tagged it Not on file. That tab is worked first because the filing deadline is at risk. Cloud Staff checks the portal before calling. Not on file means they mail it. A missing portal login goes to credentialing. Their finding does not close the claim.",
     button: "Portal says the claim is on file",
   },
   {
@@ -154,14 +155,18 @@ const beats: Beat[] = [
     note: "The EDI report includes a medical-record denial for this endoscopy.",
     steps: at(5),
     fields: [
-      { label: "Came in on", value: "EDI report" },
-      { label: "Also arrives by", value: "AdvancedMD, the AR, or an email from Alicia" },
-      { label: "Diagram", value: "Medical records requests" },
+      { label: "Read from the EDI", value: "Confirmed onto this claim" },
+      { label: "Patient", value: "Helen Marsh" },
+      { label: "Date of service", value: "Aug 2, 2026" },
+      { label: "CPT", value: "31231" },
+      { label: "Insurance paid", value: "$0.00" },
+      { label: "Patient responsibility", value: "$1,120.00" },
+      { label: "Denial reason", value: "Medical records" },
     ],
     files: ["edi-denial-helen.pdf"],
     guide:
-      "This is the first box on Crystal’s medical-records diagram. The tracker lead finds a medical-record denial on the EDI report. The same request can also arrive in AdvancedMD, on the AR, or in an email from Alicia.",
-    button: "Look up the patient in AdvancedMD",
+      "Crystal already combined the EDI PDFs and dropped them for the tracker leads. These are the fields they copy into the clinic tracker by hand. They are on the claim so someone can confirm them. The same request can also arrive in AdvancedMD, on the AR, or in an email from Alicia.",
+    button: "Confirm the EDI fields",
   },
   {
     desk: "tracker",
@@ -372,8 +377,6 @@ export function demoClaim(step = 0): Claim {
     patient: "Helen Marsh",
     practice: "Cedar Row ENT",
     payer: "Medicare",
-    balance: balance ?? "$1,120.00",
-    urgency: urgency ?? (index === beats.length - 1 ? "Routine" : "Urgent"),
     dueDate: "Oct 7, 2026",
     history: beats.slice(0, index + 1).map((item, historyIndex) => ({
       id: `demo-${historyIndex}`,
